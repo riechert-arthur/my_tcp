@@ -1,0 +1,9 @@
+name: my_tcp
+
+services:
+  tcp:
+    image: gcc:14.3.0-bookworm
+    build:
+      context: .
+    ports:
+      - 8080:8080
