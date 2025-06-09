@@ -1,5 +1,5 @@
-#ifndef PACKET_HEADER_H
-#define PACKET_HEADER_H
+#ifndef TCP_HEADER_H
+#define TCP_HEADER_H
 
 #include <stdint.h>
 
