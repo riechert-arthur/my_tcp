@@ -99,3 +99,21 @@ int send_ack(int socket, uint8_t* buf) {
 
   return 0;
 }
+
+uint8_t* read_tcp_data(int socket, uint8_t* buf) {
+  int r = recv(socket, buf, MAX_BUFFER_SIZE, 0);
+
+  if (r < 0) {
+    perror("Error reading data from socket:");
+    return NULL;
+  }
+
+  uint8_t* data = strip_tcp_header(buf);
+
+  if (data == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+  
+  return data;
+}

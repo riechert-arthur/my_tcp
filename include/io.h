@@ -44,4 +44,18 @@ static uint16_t compute_checksum(struct iphdr* ip_header, tcp_header_t* tcp_head
   return ~checksum; 
 }
 
+/*
+ * Returns the offset of the tcp header in the buffer.
+ */
+static struct iphdr* strip_ip_header(uint8_t* buf) {
+  return (uint8_t*) buf + sizeof(struct iphdr);
+}
+
+/*
+ * Returns the offset of the data in the buffer.
+ */
+static uint8_t* strip_tcp_header(uint8_t* buf) {
+  return (uint8_t*) buf + sizeof(struct iphdr) + sizeof(tcp_header_t);
+}
+
 #endif
