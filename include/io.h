@@ -25,11 +25,17 @@ uint8_t* read_tcp_data(int socket, uint8_t* buf);
  */
 static tcb_t* tcb_table[MAX_TCBS];
 
-/*
- * The buf is a queue of bytes for reading data.
- */
-static uint8_t buf[MAX_BUFFER_SIZE];
 
+/*
+ * The snd_buf is a queue of bytes for sending data.
+ */
+static uint8_t snd_buf[MAX_BUFFER_SIZE];
+
+
+/*
+ * The rcv_buf is a queue of bytes for reading data.
+ */
+static uint8_t rcv_buf[MAX_BUFFER_SIZE];
 
 
 /*
@@ -67,7 +73,7 @@ static uint16_t compute_checksum(struct iphdr* ip_header, tcp_header_t* tcp_head
 
   uint32_t sums = (ip_header->saddr & left_mask) + (ip_header->saddr & right_mask >> 16)
     + (ip_header->daddr & left_mask) + (ip_header->daddr & right_mask >> 16)
-    + (ip_header->protocol) + (tcp_header->source) + (tcp_header->destination);
+    + (ip_header->protocol) + (ip_header->tot_len) + (ip_header->ihl) + (tcp_header->source) + (tcp_header->destination);
 
   uint16_t checksum;
 

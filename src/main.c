@@ -33,7 +33,7 @@ int main() {
       continue;
     }
 
-    uint8_t* data = read_tcp_data(socket, buf);
+    uint8_t* data = read_tcp_data(socket, rcv_buf);
     if (data == NULL) {
       perror("Error reading data from socket!\n");
       continue;

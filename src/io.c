@@ -55,7 +55,7 @@ int listen_on_tcp_socket(int sock) {
   tcb_table[0]->last_seq = 0;
   
   while(1) {
-    int r = recv(sock, buf, MAX_BUFFER_SIZE, 0);
+    int r = recv(sock, rcv_buf, MAX_BUFFER_SIZE, 0);
 
     if (r < 0) {
       perror("Error listening to socket on address:");
@@ -63,8 +63,8 @@ int listen_on_tcp_socket(int sock) {
       return 0; 
     }
     
-    struct iphdr *ip_header = parse_ip_header(buf);
-    tcp_header_t *tcp_header = parse_tcp_header(buf);
+    struct iphdr *ip_header = parse_ip_header(rcv_buf);
+    tcp_header_t *tcp_header = parse_tcp_header(rcv_buf);
 
     if (TCP_SYN(tcp_header->flags_and_offset)) {
       tcb_table[0]->state = SYN_SENT;
@@ -77,7 +77,7 @@ int listen_on_tcp_socket(int sock) {
       tcb_table[0]->state = SYN_RCVD;
        
       // Send the acknowledge
-      send_ack(sock, buf); 
+      send_ack(sock, rcv_buf); 
 
       continue;
     } else if ((tcb_table[0]->state == SYN_SENT 
