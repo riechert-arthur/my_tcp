@@ -47,9 +47,9 @@ int listen_on_tcp_socket(int sock) {
 
     if ((tcb_table->state == LISTEN || tcb_table->state == SYN_SENT) && TCP_SYN(tcp_header->flags_and_offset)) {
       tcb_table->state = SYN_RECVD;
-      
+       
       // Send the acknowledge
-
+      
       continue;
     } else if ((tcb_table->state == SYN_SENT || tcb_table->state == SYN_RECVD) && TCP_ACK(tcp_header->flags_and_offset) {
       tcb_table->state = ESTAB;
@@ -57,4 +57,39 @@ int listen_on_tcp_socket(int sock) {
       break; 
     } 
   }  
-} 
+}
+
+int send_ack(int socket, uint8_t* buf) {
+
+  uint8_t* ack;
+  size_t n = sizeof(struct iphdr) + sizeof(tcp_header_t)
+
+  if (!(ack = (uint8_t*) malloc(n))) {
+    errno = "Failed to malloc!" 
+    return -1;
+  }
+
+  memcpy(ack, buf, n);
+
+  struct iphdr *ip_header = parse_ip_header(ack); 
+  tcp_header_t *tcp_header = parse_tcp_header(ack); 
+
+  // Reverse the addresses
+  struct in_addr temp = ip_header->ip_src;
+  ip_header->ip_src = ip_header->ip_dst;
+  ip_header->ip_dst = temp;
+
+  uint16_t temp = tcp_header->source;
+  tcp_header->source = tcp_header->destination;
+  tcp_header->destination = temp;
+  tcp_header->ack_number = tcp->sequence_number + 1;
+  
+  // Randomly generate a new sequence number
+  tcp_header->sequence_number = rand(); 
+
+  tcp_header->flags_and_offset = tcp_make_flags_and_offset(0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0);
+
+  ssize_t s = send(socket, ack, n, 0);
+
+  return 0;
+}

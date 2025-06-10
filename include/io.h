@@ -4,6 +4,8 @@
 #include <sys/socket.h>
 #include "tcp_header.h"
 #include <netinet/ip.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #define MAX_TCBS 1024
 #define MAX_BUFFER_SIZE 4096
