@@ -8,7 +8,6 @@
 #include "io.h"
 
 int main() {
-  uint8_t buffer[MAX_BUFFER_SIZE];
 
   while(1) {
     printf("Initializing connection...\n");
@@ -34,8 +33,14 @@ int main() {
       continue;
     }
 
-    read_from_socket(socket, buffer, sizeof(buffer));
-    printf("Received message: %s\n", buffer);
+    uint8_t* data = read_tcp_data(socket, buf);
+    if (data == NULL) {
+      perror("Error reading data from socket!\n");
+      continue;
+    }
+
+    printf("Received message: %s\n", data);
+    
   }
   
   close(socket);

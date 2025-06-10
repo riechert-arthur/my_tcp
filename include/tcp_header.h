@@ -4,6 +4,18 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/*
+ * The tcp_header_t struct represents a tcp header.
+ * 
+ * @param source The source port.
+ * @param destination The destination port.
+ * @param sequence_number The sequence number.
+ * @param ack_number The acknowledgment number.
+ * @param flags_and_offset The flags and offset.
+ * @param window The window size.
+ * @param checksum The checksum.
+ * @param urgent_ptr The urgent pointer.
+ */
 typedef struct __attribute__((packed)) {
     uint16_t source;        
     uint16_t destination;  
@@ -21,6 +33,12 @@ typedef struct __attribute__((packed)) {
 
 } tcp_header_t;
 
+/*
+ * The TCP_OFFSET macro returns the offset of the tcp header.
+ * 
+ * @param f The flags and offset.
+ * @return The offset of the tcp header.
+ */
 #define TCP_OFFSET(f)   (((f) >> 12) & 0xF)
 #define TCP_RESERVED(f) (((f) >> 9) & 0x7)
 #define TCP_NS(f)       (((f) >> 8) & 0x1)
@@ -33,6 +51,22 @@ typedef struct __attribute__((packed)) {
 #define TCP_SYN(f)      (((f) >> 1) & 0x1)
 #define TCP_FIN(f)      ((f) & 0x1)
 
+/*
+ * The tcp_make_flags_and_offset function creates a flags and offset.
+ * 
+ * @param offset The offset.
+ * @param reserved The reserved.
+ * @param ns The ns.
+ * @param cwr The cwr.
+ * @param ece The ece.
+ * @param urg The urg.
+ * @param ack The ack.
+ * @param psh The psh.
+ * @param rst The rst.
+ * @param syn The syn.
+ * @param fin The fin.
+ * @return The flags and offset.
+ */
 static inline uint16_t tcp_make_flags_and_offset(
   uint8_t offset, uint8_t reserved, bool ns,
   bool cwr, bool ece, bool urg, bool ack, bool psh,

@@ -19,6 +19,11 @@ int create_tcp_socket() {
  * address. For example, we would bind 127.0.0.1:8080 to the
  * socket's file descriptor. The address is used with a routing table
  * to direct the data to the local network interface / gateway.
+ * 
+ * @param sock The socket to bind.
+ * @param saddr The address to bind to.
+ * @param addrlen The length of the address.
+ * @return The result of the bind operation.
  */ 
 int bind_to_tcp_socket(int sock, struct sockaddr_in* saddr, int addrlen) {
   int b = bind(sock, (struct sockaddr*) saddr, addrlen);
@@ -29,6 +34,12 @@ int bind_to_tcp_socket(int sock, struct sockaddr_in* saddr, int addrlen) {
   return b;
 }
 
+/*
+ * Listens on the socket for incoming connections.
+ * 
+ * @param sock The socket to listen on.
+ * @return The result of the bind operation.
+*/
 int listen_on_tcp_socket(int sock) {
 
   // Default to 1 TCB for now...
@@ -82,6 +93,13 @@ int listen_on_tcp_socket(int sock) {
   }  
 }
 
+/*
+ * Sends an acknowledge to the client.
+ * 
+ * @param socket The socket to send the acknowledge to.
+ * @param buf The buffer to send the acknowledge from.
+ * @return The result of the send operation.
+ */
 int send_ack(int socket, uint8_t* buf) {
 
   uint8_t* ack;
@@ -118,6 +136,13 @@ int send_ack(int socket, uint8_t* buf) {
   return 0;
 }
 
+/*
+ * Reads data from the socket.
+ * 
+ * @param socket The socket to read data from.
+ * @param buf The buffer to read data into.
+ * @return The data read from the socket.
+ */
 uint8_t* read_tcp_data(int socket, uint8_t* buf) {
   int r = recv(socket, buf, MAX_BUFFER_SIZE, 0);
 
