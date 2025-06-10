@@ -43,23 +43,8 @@ int bind_to_tcp_socket(int sock, struct sockaddr_in* saddr, int addrlen) {
 int listen_on_tcp_socket(int sock) {
 
   // Default to 1 TCB for now...
-  if (!tcb_table[0]) {
-    tcb_table[0] = (tcb_t*)malloc(sizeof(tcb_t));
-  }
-  tcb_table[0]->state = LISTEN;
-  tcb_table[0]->snd_una = 0;
-  tcb_table[0]->snd_nxt = 0;
-  tcb_table[0]->seg_ack = 0;
-  tcb_table[0]->seg_seq = 0;
-  tcb_table[0]->seq_len = 0;
-  tcb_table[0]->last_seq = 0;
-  tcb_table[0]->local_port = 0;
-  tcb_table[0]->local_address = 0;
-  tcb_table[0]->remote_port = 0;
-  tcb_table[0]->remote_address = 0;
-  tcb_table[0]->ip_security_level = 0;
-  tcb_table[0]->rcv_buf = rcv_buf;
-  tcb_table[0]->snd_buf = snd_buf;
+  tcb_table[0] = create_tcb(8080, 0, 0, 0);
+
   while(1) {
     int r = recv(sock, rcv_buf, MAX_BUFFER_SIZE, 0);
 
