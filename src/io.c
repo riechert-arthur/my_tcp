@@ -36,6 +36,12 @@ int listen_on_tcp_socket(int sock) {
     tcb_table[0] = (tcb_t*)malloc(sizeof(tcb_t));
   }
   tcb_table[0]->state = LISTEN;
+  tcb_table[0]->snd_una = 0;
+  tcb_table[0]->snd_nxt = 0;
+  tcb_table[0]->seg_ack = 0;
+  tcb_table[0]->seg_seq = 0;
+  tcb_table[0]->seq_len = 0;
+  tcb_table[0]->last_seq = 0;
   
   while(1) {
     int r = recv(sock, buf, MAX_BUFFER_SIZE, 0);
@@ -49,6 +55,13 @@ int listen_on_tcp_socket(int sock) {
     struct iphdr *ip_header = parse_ip_header(buf);
     tcp_header_t *tcp_header = parse_tcp_header(buf);
 
+    if (TCP_SYN(tcp_header->flags_and_offset)) {
+      tcb_table[0]->state = SYN_SENT;
+      tcb_table[0]->seg_seq = tcp_header->sequence_number;
+      tcb_table[0]->seq_len = ip_header->tot_len - ip_header->ihl * 4;
+      tcb_table[0]->last_seq = tcp_header->sequence_number;
+    }
+
     if ((tcb_table[0]->state == LISTEN || tcb_table[0]->state == SYN_SENT) && TCP_SYN(tcp_header->flags_and_offset)) {
       tcb_table[0]->state = SYN_RCVD;
        
@@ -56,7 +69,12 @@ int listen_on_tcp_socket(int sock) {
       send_ack(sock, buf); 
 
       continue;
-    } else if ((tcb_table[0]->state == SYN_SENT || tcb_table[0]->state == SYN_RECVD) && TCP_ACK(tcp_header->flags_and_offset)) {
+    } else if ((tcb_table[0]->state == SYN_SENT 
+      || tcb_table[0]->state == SYN_RCVD) 
+      && TCP_ACK(tcp_header->flags_and_offset)
+      && tcb_table[0]->snd_una < tcb_table[0]->seg_ack
+      && tcb_table[0]->seg_ack <= tcb_table[0]->snd_nxt) {
+
       tcb_table[0]->state = ESTAB;
 
       break; 
@@ -105,6 +123,16 @@ uint8_t* read_tcp_data(int socket, uint8_t* buf) {
 
   if (r < 0) {
     perror("Error reading data from socket:");
+    return NULL;
+  }
+
+  struct iphdr* ip_header = parse_ip_header(buf);
+  tcp_header_t* tcp_header = parse_tcp_header(buf);
+
+  uint16_t checksum = compute_checksum(ip_header, tcp_header);
+
+  if (checksum != tcp_header->checksum) {
+    errno = EINVAL;
     return NULL;
   }
 
