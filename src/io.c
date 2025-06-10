@@ -1,4 +1,5 @@
 #include "io.h"
+
 /**
  * By default, sockets will use a TCP protocol.
  * We create a raw one because we want to implement
@@ -31,12 +32,15 @@ int bind_to_tcp_socket(int sock, struct sockaddr_in* saddr, int addrlen) {
 int listen_on_tcp_socket(int sock) {
 
   // Default to 1 TCB for now...
-  tcb_table->state = LISTEN;
+  if (!tcb_table[0]) {
+    tcb_table[0] = (tcb_t*)malloc(sizeof(tcb_t));
+  }
+  tcb_table[0]->state = LISTEN;
   
   while(1) {
     int r = recv(sock, buf, MAX_BUFFER_SIZE, 0);
 
-    if r < 0 {
+    if (r < 0) {
       perror("Error listening to socket on address:");
     } else if (r == 0) {
       return 0; 
@@ -45,14 +49,15 @@ int listen_on_tcp_socket(int sock) {
     struct iphdr *ip_header = parse_ip_header(buf);
     tcp_header_t *tcp_header = parse_tcp_header(buf);
 
-    if ((tcb_table->state == LISTEN || tcb_table->state == SYN_SENT) && TCP_SYN(tcp_header->flags_and_offset)) {
-      tcb_table->state = SYN_RECVD;
+    if ((tcb_table[0]->state == LISTEN || tcb_table[0]->state == SYN_SENT) && TCP_SYN(tcp_header->flags_and_offset)) {
+      tcb_table[0]->state = SYN_RCVD;
        
       // Send the acknowledge
-      
+      send_ack(sock, buf); 
+
       continue;
-    } else if ((tcb_table->state == SYN_SENT || tcb_table->state == SYN_RECVD) && TCP_ACK(tcp_header->flags_and_offset) {
-      tcb_table->state = ESTAB;
+    } else if ((tcb_table[0]->state == SYN_SENT || tcb_table[0]->state == SYN_RECVD) && TCP_ACK(tcp_header->flags_and_offset)) {
+      tcb_table[0]->state = ESTAB;
 
       break; 
     } 
@@ -62,10 +67,10 @@ int listen_on_tcp_socket(int sock) {
 int send_ack(int socket, uint8_t* buf) {
 
   uint8_t* ack;
-  size_t n = sizeof(struct iphdr) + sizeof(tcp_header_t)
+  size_t n = sizeof(struct iphdr) + sizeof(tcp_header_t);
 
   if (!(ack = (uint8_t*) malloc(n))) {
-    errno = "Failed to malloc!" 
+    errno = ENOMEM;
     return -1;
   }
 
@@ -75,19 +80,20 @@ int send_ack(int socket, uint8_t* buf) {
   tcp_header_t *tcp_header = parse_tcp_header(ack); 
 
   // Reverse the addresses
-  struct in_addr temp = ip_header->ip_src;
-  ip_header->ip_src = ip_header->ip_dst;
-  ip_header->ip_dst = temp;
+  uint32_t temp = ip_header->saddr;
+  ip_header->saddr = ip_header->daddr;
+  ip_header->daddr = temp;
 
   uint16_t temp = tcp_header->source;
   tcp_header->source = tcp_header->destination;
   tcp_header->destination = temp;
-  tcp_header->ack_number = tcp->sequence_number + 1;
+  tcp_header->ack_number = tcp_header->sequence_number + 1;
   
   // Randomly generate a new sequence number
   tcp_header->sequence_number = rand(); 
 
   tcp_header->flags_and_offset = tcp_make_flags_and_offset(0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0);
+  tcp_header->checksum = compute_checksum(ip_header, tcp_header);
 
   ssize_t s = send(socket, ack, n, 0);
 

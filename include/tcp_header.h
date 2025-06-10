@@ -2,6 +2,7 @@
 #define TCP_HEADER_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef struct __attribute__((packed)) {
     uint16_t source;        
