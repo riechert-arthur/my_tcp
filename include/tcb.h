@@ -30,6 +30,10 @@ typedef enum {
  * @param seg_seq The sequence number of the next byte to send.
  * @param seq_len The length of the sequence number.
  * @param last_seq The last sequence number received.
+ * @param local_port The local port.
+ * @param local_address The local address.
+ * @param remote_port The remote port.
+ * @param remote_address The remote address.
  */
 typedef struct {
   tcb_state_t state;
@@ -39,6 +43,13 @@ typedef struct {
   uint16_t seg_seq;
   uint16_t seq_len;
   uint16_t last_seq;
+  uint16_t local_port;
+  uint16_t local_address;
+  uint16_t remote_port;
+  uint16_t remote_address;
+  uint16_t ip_security_level;
+  uint8_t *rcv_buf;
+  uint8_t *snd_buf;
 } tcb_t;
 
 #endif
